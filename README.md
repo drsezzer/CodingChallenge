@@ -1,4 +1,4 @@
-#Coding Challenge - June 2024.
+### Coding Challenge - June 2024.
 
 A simple C program to determine the most imported dependency.
 
