@@ -1,3 +1,7 @@
+"""
+and then it comes up with the wrong answer.... b2!
+"""
+
 input = """a 1 b 2
 a 1 c 4
 b 2 c 4
@@ -6,7 +10,6 @@ b 3 b 2
 b 3 e 2
 c 4 d 0
 c 4 e 1"""
-
 
 import sys
 from collections import defaultdict, deque
@@ -29,38 +32,36 @@ def build_graph(dependencies):
 
 def calculate_dependents(reverse_graph):
     transitive_count = defaultdict(int)
-    direct_count = defaultdict(lambda: 0)
+    direct_count = defaultdict(int)
 
     # Calculate direct dependents
     for node, dependents in reverse_graph.items():
         direct_count[node] = len(dependents)
 
-    # Calculate transitive dependents using a modified BFS that collects updates
-    for node in reverse_graph:
+    # Collect all nodes in advance to prevent dictionary change errors
+    all_nodes = list(reverse_graph.keys())
+
+    # Calculate transitive dependents using BFS
+    for node in all_nodes:
         visited = set()
         queue = deque([node])
-        local_updates = defaultdict(int)
         while queue:
             current = queue.popleft()
             if current not in visited:
                 visited.add(current)
                 for dependent in reverse_graph[current]:
                     if dependent not in visited:
-                        local_updates[dependent] += 1
+                        transitive_count[dependent] += 1
                         queue.append(dependent)
-        # Apply the collected updates to the transitive count
-        for dep, count in local_updates.items():
-            transitive_count[dep] += count
 
     return transitive_count, direct_count
 
 def find_most_problematic(transitive_count, direct_count):
     max_ratio = -1
     problematic_package = None
-    for node, direct in direct_count.items():
-        if direct > 0:  # Avoid division by zero
-            trans = transitive_count[node]
-            ratio = trans / direct
+    for node in direct_count:
+        if direct_count[node] > 0:  # Avoid division by zero
+            ratio = transitive_count[node] / direct_count[node]
             if ratio > max_ratio:
                 max_ratio = ratio
                 problematic_package = node
@@ -78,3 +79,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

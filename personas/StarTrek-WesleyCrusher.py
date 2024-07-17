@@ -1,7 +1,9 @@
 """
-Redirected with: 'it throws dictionary changed exception'
-
+redirected with 'its still throwing dictionary changed exception for line 'for node in graph''
+now works but returned wrong answer b2!
 """
+
+
 input = """a 1 b 2
 a 1 c 4
 b 2 c 4
@@ -13,49 +15,48 @@ c 4 e 1
 """
 
 import sys
-from collections import defaultdict
+from collections import defaultdict, deque
 
 def parse_input():
-    # Reading from standard input
+    # Simulating reading from standard input for the example
     dependencies = input.strip().split('\n')
     graph = defaultdict(list)
     reverse_graph = defaultdict(list)
 
     for line in dependencies:
         package1, version1, package2, version2 = line.split()
-        graph[(package1, int(version1))].append((package2, int(version2)))
-        reverse_graph[(package2, int(version2))].append((package1, int(version1)))
+        version1, version2 = int(version1), int(version2)
+        graph[(package1, version1)].append((package2, version2))
+        reverse_graph[(package2, version2)].append((package1, version1))
 
     return graph, reverse_graph
 
 def compute_transitive_dependants(graph):
-    def dfs(node, visited):
+    transitive_counts = {}
+
+    def dfs(node):
         stack = [node]
-        local_visited = set()
-        local_visited.add(node)
+        visited = set()
+        visited.add(node)
         count = 0
         while stack:
             current = stack.pop()
             for neighbor in graph[current]:
                 if neighbor not in visited:
                     visited.add(neighbor)
-                    local_visited.add(neighbor)
                     stack.append(neighbor)
                     count += 1
-        return count, local_visited
+        return count
 
-    transitive_counts = {}
-    visited = set()
-    for node in graph:
-        if node not in visited:
-            count, local_visited = dfs(node, visited)
-            for v in local_visited:
-                transitive_counts[v] = count
+    for node in list(graph.keys()):  # Operate on a static list of keys
+        transitive_counts[node] = dfs(node)
 
     return transitive_counts
 
 def compute_direct_dependants(reverse_graph):
-    direct_counts = {node: len(dependants) for node, dependants in reverse_graph.items()}
+    direct_counts = {}
+    for node, dependants in reverse_graph.items():
+        direct_counts[node] = len(dependants)
     return direct_counts
 
 def find_most_problematic_package(transitive_counts, direct_counts):
@@ -63,11 +64,13 @@ def find_most_problematic_package(transitive_counts, direct_counts):
     problematic_package = None
 
     for package, transitive_count in transitive_counts.items():
-        if package in direct_counts and direct_counts[package] > 0:
-            ratio = transitive_count / direct_counts[package]
-            if ratio > max_ratio:
-                max_ratio = ratio
-                problematic_package = package
+        if package in direct_counts:
+            direct_count = direct_counts[package]
+            if direct_count > 0:  # Avoid division by zero
+                ratio = transitive_count / direct_count
+                if ratio > max_ratio:
+                    max_ratio = ratio
+                    problematic_package = package
 
     return problematic_package
 
@@ -76,7 +79,7 @@ def main():
     transitive_counts = compute_transitive_dependants(graph)
     direct_counts = compute_direct_dependants(reverse_graph)
     problematic_package = find_most_problematic_package(transitive_counts, direct_counts)
-    
+
     if problematic_package:
         print(f"{problematic_package[0]} {problematic_package[1]}")
     else:
@@ -84,4 +87,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
