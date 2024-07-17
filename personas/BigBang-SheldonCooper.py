@@ -1,36 +1,9 @@
 """
-standard prompt 
-
-Ah, an intellectual challenge, how refreshing! You're asking for a program in 
-Python to solve a problem regarding package dependencies. It's reminiscent of a 
-dependency graph, and what we seek to find is the package with the highest 
-ratio of transitive dependents to direct dependents. This is, essentially, a 
-graph problem where nodes are packages with versions, and edges define 
-dependency relationships.
-
-Given the sheer importance of defining our constructs properly, let's use a 
-directed graph where each node represents a package-version tuple, like 
-("a", 1). An edge from ("a", 1) to ("b", 2) implies that version 1 of package 
-"a" depends on version 2 of package "b".
-
-We'll utilize the networkx library for graph operations as it provides 
-extensive functionalities for handling directed graphs, including methods for 
-finding predecessors and descendants which are quintessential for our 
-calculations.
+Redirected with 'it think it's giving the wrong answer...'
 
 
-... but ultimately gets it wrong! b2.
 """
 
-input = """a 1 b 2
-a 1 c 4
-b 2 c 4
-b 2 d 0
-b 3 b 2
-b 3 e 2
-c 4 d 0
-c 4 e 1
-"""
 
 import sys
 import networkx as nx
@@ -40,7 +13,18 @@ def main():
     graph = nx.DiGraph()
 
     # Read lines from standard input
-    for line in input.strip().split("\n"):
+    input_lines = [
+        "a 1 b 2",
+        "a 1 c 4",
+        "b 2 c 4",
+        "b 2 d 0",
+        "b 3 b 2",
+        "b 3 e 2",
+        "c 4 d 0",
+        "c 4 e 1"
+    ]
+
+    for line in input_lines:
         # Split the line into components
         src_package, src_version, dest_package, dest_version = line.split()
         src_version = int(src_version)
