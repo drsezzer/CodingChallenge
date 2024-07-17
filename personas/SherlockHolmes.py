@@ -9,8 +9,6 @@ c 4 e 1"""
 
 
 def read_input(input):
-    #import sys
-    #input = sys.stdin.read().strip()
     return input.split('\n')
 
 def build_graph(dependencies):

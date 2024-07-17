@@ -1,6 +1,6 @@
 """
-redirected with 'it gives the wrong answer :('
-... but then it exceptioned dictionary changed size, again!
+redirected with 'it's throwing changed dictionary size exception for line 'for node in reverse_graph''
+... forth attempt - it gets the right answer!
 """
 
 input = """a 1 b 2
@@ -30,9 +30,7 @@ def read_input():
     return dependencies
 
 def build_graphs(dependencies):
-    # Maps a package-version to the list of package-versions that depend on it (reverse graph)
     reverse_graph = defaultdict(set)
-    # Maps a package-version to the list of package-versions it depends on (forward graph)
     graph = defaultdict(set)
     
     for dep in dependencies:
@@ -44,10 +42,10 @@ def build_graphs(dependencies):
     
     return graph, reverse_graph
 
-def calculate_transitive_dependents(graph, reverse_graph):
-    # Calculate transitive dependents using a BFS approach
+def calculate_transitive_dependents(reverse_graph):
     transitive_dependents_count = {}
-    for node in reverse_graph:
+    nodes = list(reverse_graph.keys())  # Copy of keys to stabilize the dictionary during iteration
+    for node in nodes:
         visited = set()
         queue = deque([node])
         while queue:
@@ -55,7 +53,8 @@ def calculate_transitive_dependents(graph, reverse_graph):
             if current not in visited:
                 visited.add(current)
                 for neighbor in reverse_graph[current]:
-                    queue.append(neighbor)
+                    if neighbor not in visited:
+                        queue.append(neighbor)
         transitive_dependents_count[node] = len(visited) - 1  # Exclude the node itself
     return transitive_dependents_count
 
@@ -78,7 +77,7 @@ def find_most_problematic_package(reverse_graph, transitive_dependents_count):
 def main():
     dependencies = read_input()
     graph, reverse_graph = build_graphs(dependencies)
-    transitive_dependents_count = calculate_transitive_dependents(graph, reverse_graph)
+    transitive_dependents_count = calculate_transitive_dependents(reverse_graph)
     problematic_package = find_most_problematic_package(reverse_graph, transitive_dependents_count)
     if problematic_package:
         print(f"{problematic_package[0]} {problematic_package[1]}")
