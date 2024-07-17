@@ -1,5 +1,3 @@
-
-
 input = """a 1 b 2
 a 1 c 4
 b 2 c 4
@@ -8,7 +6,8 @@ b 3 b 2
 b 3 e 2
 c 4 d 0
 c 4 e 1"""
-      
+
+
 import sys
 from collections import defaultdict, deque
 
@@ -30,24 +29,28 @@ def build_graph(dependencies):
 
 def calculate_dependents(reverse_graph):
     transitive_count = defaultdict(int)
-    direct_count = defaultdict(int)
-    
+    direct_count = defaultdict(lambda: 0)
+
     # Calculate direct dependents
     for node, dependents in reverse_graph.items():
         direct_count[node] = len(dependents)
-    
-    # Calculate transitive dependents using BFS
+
+    # Calculate transitive dependents using a modified BFS that collects updates
     for node in reverse_graph:
         visited = set()
         queue = deque([node])
+        local_updates = defaultdict(int)
         while queue:
             current = queue.popleft()
             if current not in visited:
                 visited.add(current)
                 for dependent in reverse_graph[current]:
                     if dependent not in visited:
-                        transitive_count[dependent] += 1
+                        local_updates[dependent] += 1
                         queue.append(dependent)
+        # Apply the collected updates to the transitive count
+        for dep, count in local_updates.items():
+            transitive_count[dep] += count
 
     return transitive_count, direct_count
 

@@ -1,14 +1,7 @@
 """
-Alright, I'll take on the role of Wesley Crusher, the young and ambitious 
-Starfleet Academy cadet from Star Trek: The Next Generation, always keen to 
-dive into a challenging problem with an analytical approach. I'll write the 
-Python program in a way that reflects Wesley's enthusiasm for solving complex 
-problems using technology and his love for experimentation and learning. Let's 
-tackle the task of finding the most problematic dependency among packages.
-
+Redirected with: 'it throws dictionary changed exception'
 
 """
-
 input = """a 1 b 2
 a 1 c 4
 b 2 c 4
@@ -20,10 +13,10 @@ c 4 e 1
 """
 
 import sys
-from collections import defaultdict, deque
+from collections import defaultdict
 
 def parse_input():
-    # Reading from standard input (simulated here as an example for understanding)
+    # Reading from standard input
     dependencies = input.strip().split('\n')
     graph = defaultdict(list)
     reverse_graph = defaultdict(list)
@@ -37,17 +30,27 @@ def parse_input():
 
 def compute_transitive_dependants(graph):
     def dfs(node, visited):
+        stack = [node]
+        local_visited = set()
+        local_visited.add(node)
         count = 0
-        for neighbor in graph[node]:
-            if neighbor not in visited:
-                visited.add(neighbor)
-                count += 1 + dfs(neighbor, visited)
-        return count
+        while stack:
+            current = stack.pop()
+            for neighbor in graph[current]:
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    local_visited.add(neighbor)
+                    stack.append(neighbor)
+                    count += 1
+        return count, local_visited
 
     transitive_counts = {}
+    visited = set()
     for node in graph:
-        visited = set()
-        transitive_counts[node] = dfs(node, visited)
+        if node not in visited:
+            count, local_visited = dfs(node, visited)
+            for v in local_visited:
+                transitive_counts[v] = count
 
     return transitive_counts
 
@@ -81,3 +84,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

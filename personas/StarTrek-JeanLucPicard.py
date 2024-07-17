@@ -1,3 +1,7 @@
+""" Aftering 2 attempts to get passed dictionary changed exception, this orked
+but result as b3!
+"""
+
 input = """a 1 b 2
 a 1 c 4
 b 2 c 4
@@ -13,7 +17,7 @@ from collections import defaultdict, deque
 def read_input():
     dependencies = defaultdict(list)
     direct_dependents_count = defaultdict(int)
-    for line in input.strip().split("\n"):
+    for line in input.strip().split('\n'):
         if line.strip():
             first_package, first_version, second_package, second_version = line.split()
             first_version, second_version = int(first_version), int(second_version)
@@ -23,7 +27,9 @@ def read_input():
 
 def calculate_transitive_dependants(dependencies):
     transitive_dependants_count = defaultdict(int)
-    for package_version in dependencies:
+    all_packages = list(dependencies.keys())  # Take a snapshot of all keys to avoid runtime changes
+
+    for package_version in all_packages:
         visited = set()
         queue = deque([package_version])
         while queue:
@@ -40,7 +46,7 @@ def calculate_transitive_dependants(dependencies):
                 transitive_dependants_count[node] += 1
     return transitive_dependants_count
 
-def find_most_problematic_package(dependencies, direct_dependents_count, transitive_dependants_count):
+def find_most_problematic_package(direct_dependents_count, transitive_dependants_count):
     max_ratio = -1
     problematic_package = None
     for package, transitive_count in transitive_dependants_count.items():
@@ -55,7 +61,7 @@ def find_most_problematic_package(dependencies, direct_dependents_count, transit
 def main():
     dependencies, direct_dependents_count = read_input()
     transitive_dependants_count = calculate_transitive_dependants(dependencies)
-    most_problematic_package = find_most_problematic_package(dependencies, direct_dependents_count, transitive_dependants_count)
+    most_problematic_package = find_most_problematic_package(direct_dependents_count, transitive_dependants_count)
     if most_problematic_package:
         print(f"{most_problematic_package[0]} {most_problematic_package[1]}")
 
