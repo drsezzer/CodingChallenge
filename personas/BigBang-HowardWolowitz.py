@@ -40,14 +40,16 @@ def read_dependencies():
 def calculate_transitive_dependants(dependants):
     # Calculates all transitive dependants using a BFS approach
     all_dependants = {}
-    for package in dependants:
+    for package in list(dependants.keys()):  # Work with a list of keys to avoid dictionary change during iteration
         visited = set()
         queue = deque([package])
         while queue:
             current = queue.popleft()
             if current not in visited:
                 visited.add(current)
-                queue.extend(dependants[current])
+                for neighbor in dependants[current]:
+                    if neighbor not in visited:
+                        queue.append(neighbor)
         all_dependants[package] = visited - {package}  # Remove the package itself from its dependants
     return all_dependants
 
@@ -55,10 +57,10 @@ def find_most_problematic(dependencies, all_dependants):
     max_ratio = -1
     problematic_package = None
 
-    for package, direct_deps in dependencies.items():
+    for package in list(dependencies.keys()):  # Similarly, use list to avoid runtime dictionary change issues
         if package in all_dependants:
             transitive_count = len(all_dependants[package])
-            direct_count = len(direct_deps)
+            direct_count = len(dependencies[package])
             if direct_count > 0:  # Avoid division by zero
                 ratio = transitive_count / direct_count
                 if ratio > max_ratio:
