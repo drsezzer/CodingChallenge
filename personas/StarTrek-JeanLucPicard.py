@@ -14,63 +14,61 @@ from collections import defaultdict, deque
 
 def read_input():
     dependencies = defaultdict(list)
-    direct_dependents_count = defaultdict(int)
-    all_packages = set()
-    
+    direct_dependents = defaultdict(set)
+
     for line in input.strip().split("\n"):
         if line.strip():
-            first_package, first_version, second_package, second_version = line.split()
-            first_version, second_version = int(first_version), int(second_version)
-            # Each line indicates that first_package depends on second_package
-            dependencies[(second_package, second_version)].append((first_package, first_version))
-            direct_dependents_count[(second_package, second_version)] += 1
-            all_packages.add((first_package, first_version))
-            all_packages.add((second_package, second_version))
-    
-    return dependencies, direct_dependents_count, all_packages
+            # Parse the input line
+            src_pkg, src_ver, dst_pkg, dst_ver = line.split()
+            src_ver, dst_ver = int(src_ver), int(dst_ver)
+            # src depends on dst
+            dependencies[(dst_pkg, dst_ver)].append((src_pkg, src_ver))
+            direct_dependents[(dst_pkg, dst_ver)].add((src_pkg, src_ver))
+            
+    return dependencies, direct_dependents
 
-def calculate_transitive_dependants(dependencies, all_packages):
-    transitive_dependants_count = defaultdict(int)
-    
-    # Calculate transitive dependants for each package
-    for package_version in all_packages:
+def calculate_transitive_dependants(dependencies):
+    transitive_dependents = defaultdict(set)
+
+    # Process each package-version pair
+    for pkg_ver in dependencies:
         visited = set()
-        queue = deque([package_version])
+        queue = deque([pkg_ver])
         
         while queue:
             current = queue.popleft()
             if current in visited:
                 continue
             visited.add(current)
-            for dependent in dependencies[current]:
-                if dependent not in visited:
-                    queue.append(dependent)
+            for dependent in dependencies.get(current, []):
+                queue.append(dependent)
+                transitive_dependents[pkg_ver].add(dependent)
         
-        # Increment transitive count for each visited package (excluding itself)
-        visited.remove(package_version)  # Remove the package itself from its transitive dependants
-        for node in visited:
-            transitive_dependants_count[node] += 1
+        # Remove direct dependents from transitive dependents to avoid double counting
+        transitive_dependents[pkg_ver] -= direct_dependents[pkg_ver]
 
-    return transitive_dependants_count
+    return transitive_dependents
 
-def find_most_problematic_package(direct_dependents_count, transitive_dependants_count):
+def find_most_problematic_package(direct_dependents, transitive_dependents):
     max_ratio = -1
     problematic_package = None
-    
-    for package, direct_count in direct_dependents_count.items():
-        if direct_count > 0:  # Avoid division by zero
-            transitive_count = transitive_dependants_count[package]
-            ratio = transitive_count / direct_count
+
+    for pkg_ver, dependents in direct_dependents.items():
+        if dependents:
+            trans_count = len(transitive_dependents[pkg_ver])
+            direct_count = len(dependents)
+            ratio = trans_count / direct_count
             if ratio > max_ratio:
                 max_ratio = ratio
-                problematic_package = package
-    
+                problematic_package = pkg_ver
+
     return problematic_package
 
 def main():
-    dependencies, direct_dependents_count, all_packages = read_input()
-    transitive_dependants_count = calculate_transitive_dependants(dependencies, all_packages)
-    most_problematic_package = find_most_problematic_package(direct_dependents_count, transitive_dependants_count)
+    dependencies, direct_dependents = read_input()
+    transitive_dependents = calculate_transitive_dependants(dependencies)
+    most_problematic_package = find_most_problematic_package(direct_dependents, transitive_dependents)
+
     if most_problematic_package:
         print(f"{most_problematic_package[0]} {most_problematic_package[1]}")
 
