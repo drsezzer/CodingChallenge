@@ -23,23 +23,25 @@ def main():
         src_version, dest_version = int(src_version), int(dest_version)
         graph.add_edge((src_package, src_version), (dest_package, dest_version))
 
-    # Analyze for critical leaf nodes
-    critical_leaves = {}
-    for node in graph.nodes:
-        direct_dependents = set(graph.predecessors(node))
-        transitive_dependents = set(nx.descendants(graph, node))
+    # Identify terminal nodes
+    terminal_nodes = [node for node in graph.nodes if not list(graph.successors(node))]
 
-        # Condition for a critical leaf node
-        if direct_dependents and not transitive_dependents:
-            critical_leaves[node] = len(direct_dependents)
+    # Identify the most problematic among terminal nodes by the significance of what they depend on
+    most_problematic = None
+    max_direct_dependents = -1
+    for node in terminal_nodes:
+        # Checking what each terminal node depends on
+        dependencies = graph.predecessors(node)
+        total_dependents = sum(len(list(graph.successors(dep))) for dep in dependencies)
 
-    # Determine if there are any critical leaf nodes
-    if critical_leaves:
-        most_problematic = max(critical_leaves, key=critical_leaves.get)
-        direct_count = critical_leaves[most_problematic]
-        print(f"Most problematic package as critical leaf: {most_problematic[0]} {most_problematic[1]}, Direct dependents count: {direct_count}")
+        if total_dependents > max_direct_dependents:
+            most_problematic = node
+            max_direct_dependents = total_dependents
+
+    if most_problematic:
+        print(f"Most problematic terminal package: {most_problematic[0]} {most_problematic[1]}, depending on nodes with {max_direct_dependents} total direct dependents")
     else:
-        print("No critical leaves found.")
+        print("No terminal nodes found.")
 
 if __name__ == "__main__":
     main()
