@@ -7,7 +7,6 @@ b 3 e 2
 c 4 d 0
 c 4 e 1
 """
-
 import sys
 from collections import defaultdict, deque
 
@@ -40,7 +39,8 @@ def calculate_transitive_dependants(reverse_graph):
                     count += 1
         return count
 
-    for node in reverse_graph:
+    nodes = list(reverse_graph.keys())  # Create a list of keys to iterate over
+    for node in nodes:
         transitive_counts[node] = bfs(node)
 
     return transitive_counts
