@@ -25,7 +25,7 @@ import sys
 from collections import defaultdict, deque
 
 def read_input():
-    # Let's collect the dependency information in a manner suitable for graph traversal.
+    # Collecting dependency information for graph traversal.
     dependencies = defaultdict(list)
     dependents = defaultdict(list)
     input = _input.splitlines()
@@ -38,9 +38,9 @@ def read_input():
     return dependencies, dependents
 
 def calculate_transitive_dependents(dependents):
-    # A breadth-first search approach to find all transitive dependents.
+    # Using breadth-first search to find all transitive dependents.
     transitive_count = {}
-    for package in dependents:
+    for package in list(dependents):
         visited = set()
         queue = deque([package])
         while queue:
@@ -60,12 +60,12 @@ def find_most_problematic(dependencies, dependents):
     most_problematic = None
     highest_ratio = -1
     
-    # Calculate the ratio of transitive dependants to direct dependants
-    for package in dependents:
-        if package in dependents:
-            direct_dependent_count = len(dependents[package])
-            transitive_dependent_count = transitive_dependents[package]
-            ratio = transitive_dependent_count / direct_dependent_count if direct_dependent_count > 0 else 0
+    # Calculating the ratio of transitive dependants to direct dependants
+    for package in list(dependents):
+        direct_dependent_count = len(dependents[package])
+        transitive_dependent_count = transitive_dependents.get(package, 0)
+        if direct_dependent_count > 0:
+            ratio = transitive_dependent_count / direct_dependent_count
             if ratio > highest_ratio:
                 highest_ratio = ratio
                 most_problematic = package
