@@ -15,40 +15,42 @@ c 4 d 0
 c 4 e 1
 """
 
+
 import sys
 from collections import defaultdict, deque
 
 def parse_input():
     dependencies = defaultdict(list)
+    inverse_dependencies = defaultdict(set)
     for line in input.splitlines():
         if line.strip():
             src_pkg, src_ver, dst_pkg, dst_ver = line.split()
             src_ver, dst_ver = int(src_ver), int(dst_ver)
-            dependencies[(src_pkg, src_ver)].append((dst_pkg, dst_ver))
-    return dependencies
+            dependencies[(dst_pkg, dst_ver)].append((src_pkg, src_ver))
+            inverse_dependencies[(src_pkg, src_ver)].add((dst_pkg, dst_ver))
+    return dependencies, inverse_dependencies
 
 def find_transitive_dependents(dependencies):
-    # To store transitive dependents count
-    transitive_count = {pkg: set() for pkg in dependencies.keys()}
+    transitive_count = defaultdict(set)
     
     def dfs(node, start):
         for dependent in dependencies[node]:
             if dependent not in transitive_count[start]:
                 transitive_count[start].add(dependent)
                 dfs(dependent, start)
-                
-    for pkg in list(dependencies.keys()):  # Work on a static list of keys
+
+    for pkg in dependencies:
         dfs(pkg, pkg)
     
-    return transitive_count
+    return {pkg: len(deps) for pkg, deps in transitive_count.items()}
 
 def calculate_problematic_ratio(dependencies, transitive_count):
-    direct_count = {pkg: len(deps) for pkg, deps in dependencies.items()}
+    direct_count = {pkg: len(dependencies[pkg]) for pkg in dependencies}
     ratio = {}
 
-    for pkg, trans_deps in transitive_count.items():
-        if direct_count[pkg] > 0:  # Prevent division by zero
-            ratio[pkg] = len(trans_deps) / direct_count[pkg]
+    for pkg in transitive_count:
+        if direct_count.get(pkg, 0) > 0:
+            ratio[pkg] = transitive_count[pkg] / direct_count[pkg]
 
     return ratio
 
@@ -56,9 +58,9 @@ def find_most_problematic_package(ratio):
     return max(ratio, key=ratio.get, default=None)
 
 def main():
-    dependencies = parse_input()
-    transitive_count = find_transitive_dependents(dependencies)
-    ratio = calculate_problematic_ratio(dependencies, transitive_count)
+    dependencies, inverse_dependencies = parse_input()
+    transitive_count = find_transitive_dependents(inverse_dependencies)
+    ratio = calculate_problematic_ratio(inverse_dependencies, transitive_count)
     most_problematic = find_most_problematic_package(ratio)
     
     if most_problematic:
