@@ -37,27 +37,27 @@ def compute_dependents(graph):
             direct[node].add(dependent)
             all_dependents[node].add(dependent)
 
-    # Expand to transitive dependents using a recursive DFS
-    def dfs(node, visited):
-        for dependent in direct[node]:
-            if dependent not in visited:
-                visited.add(dependent)
-                all_dependents[dependent].update(all_dependents[node])
-                dfs(dependent, visited)
+    # Compute all (transitive) dependents using DFS
+    def dfs(node, accum):
+        for dependent in graph[node]:
+            if dependent not in accum:
+                accum.add(dependent)
+                all_dependents[dependent].update(accum)
+                dfs(dependent, accum)
 
     for node in graph:
-        dfs(node, set())
+        dfs(node, set(direct[node]))
 
-    transitive = {node: len(all_deps - direct_deps) for node, all_deps in all_dependents.items() for direct_deps in (direct[node],)}
-    direct_count = {node: len(direct_deps) for node, direct_deps in direct.items()}
+    # Calculate transitive dependents
+    transitive = {node: len(all_dependents[node] - direct[node]) for node in graph}
 
-    return transitive, direct_count
+    return transitive, {node: len(direct[node]) for node in graph}
 
 def find_most_problematic(transitive, direct):
     max_ratio = -1
     problematic_package = None
-    for node in direct:
-        if direct[node] > 0:  # Ensure we have direct dependants
+    for node in transitive:
+        if direct[node] > 0:  # Avoid division by zero
             ratio = transitive[node] / direct[node]
             if ratio > max_ratio:
                 max_ratio = ratio
