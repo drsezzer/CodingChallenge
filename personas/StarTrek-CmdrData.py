@@ -16,44 +16,45 @@ from collections import defaultdict, deque
 def read_dependencies():
     dependencies = []
     try:
+        # Accept input until an EOF is encountered
         for line in input.strip().split('\n'):
-            parts = line.split()
-            if len(parts) == 4:
-                dependencies.append((parts[0], int(parts[1]), parts[2], int(parts[3])))
+            if line:
+                parts = line.split()
+                if len(parts) == 4:
+                    dependencies.append((parts[0], int(parts[1]), parts[2], int(parts[3])))
     except EOFError:
         pass
     return dependencies
 
 def build_graph(dependencies):
     forward_graph = defaultdict(list)
-    reverse_graph = defaultdict(list)
     for depender, depender_ver, dependee, dependee_ver in dependencies:
         forward_graph[(dependee, dependee_ver)].append((depender, depender_ver))
-        reverse_graph[(depender, depender_ver)].append((dependee, dependee_ver))
-    return forward_graph, reverse_graph
+    return forward_graph
 
 def calculate_dependents(graph):
-    transitive = defaultdict(set)
     direct = defaultdict(set)
+    transitive = defaultdict(set)
 
     # Populate direct dependents
     for node, dependents in graph.items():
         for dependent in dependents:
             direct[node].add(dependent)
 
-    # Calculate all (transitive) dependents using BFS
-    for node in graph:
+    # Calculate transitive dependents using BFS without modifying the graph structure
+    for node in list(graph.keys()):  # Ensure the graph's keys are listed before iteration
         visited = set()
         queue = deque([node])
         while queue:
             current = queue.popleft()
-            for dependent in graph[current]:
-                if dependent not in visited:
-                    visited.add(dependent)
+            if current not in visited:
+                visited.add(current)
+                for dependent in graph[current]:
                     transitive[node].add(dependent)
-                    queue.append(dependent)
+                    if dependent not in visited:
+                        queue.append(dependent)
 
-    # Calculate the number of transitive (excluding direct)
+    # Adjust transitive counts by removing direct dependents
     for node in transitive:
         transitive[node] -= direct[node]
 
@@ -72,8 +73,8 @@ def find_most_problematic(transitive, direct):
 
 def main():
     dependencies = read_dependencies()
-    forward_graph, _ = build_graph(dependencies)
-    transitive_count, direct_count = calculate_dependents(forward_graph)
+    graph = build_graph(dependencies)
+    transitive_count, direct_count = calculate_dependents(graph)
     problematic_package = find_most_problematic(transitive_count, direct_count)
     if problematic_package:
         print(f"{problematic_package[0]} {problematic_package[1]}")
