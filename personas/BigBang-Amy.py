@@ -21,7 +21,6 @@ from collections import defaultdict, deque
 class DependencyGraph:
     def __init__(self):
         self.dependencies = defaultdict(set)
-        self.reverse_dependencies = defaultdict(set)
         self.direct_dependants = defaultdict(int)
         self.transitive_dependants = defaultdict(set)
 
@@ -29,8 +28,7 @@ class DependencyGraph:
         key_from = (package_from, version_from)
         key_to = (package_to, version_to)
         self.dependencies[key_from].add(key_to)
-        self.reverse_dependencies[key_to].add(key_from)
-        self.direct_dependants[key_from] += 1
+        self.direct_dependants[key_to] += 1
 
     def calculate_transitive_dependants(self):
         for package in list(self.dependencies.keys()):
