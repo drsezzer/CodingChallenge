@@ -14,6 +14,7 @@ b 3 e 2
 c 4 d 0
 c 4 e 1
 """
+
 import sys
 from collections import defaultdict, deque
 
@@ -22,25 +23,25 @@ class DependencyGraph:
         self.dependencies = defaultdict(set)
         self.reverse_dependencies = defaultdict(set)
         self.direct_dependants = defaultdict(int)
-        self.transitive_dependants = defaultdict(int)
+        self.transitive_dependants = defaultdict(set)
 
     def add_dependency(self, package_from, version_from, package_to, version_to):
         key_from = (package_from, version_from)
         key_to = (package_to, version_to)
         self.dependencies[key_from].add(key_to)
         self.reverse_dependencies[key_to].add(key_from)
-        self.direct_dependants[key_to] += 1
+        self.direct_dependants[key_from] += 1
 
     def calculate_transitive_dependants(self):
-        for package in list(self.dependencies.keys()):
+        for package in self.dependencies:
             visited = set()
             queue = deque([package])
             while queue:
                 current = queue.popleft()
                 if current not in visited:
                     visited.add(current)
-                    self.transitive_dependants[package] += 1
                     for neighbour in self.dependencies[current]:
+                        self.transitive_dependants[neighbour].add(package)
                         queue.append(neighbour)
     
     def find_most_problematic_dependency(self):
@@ -48,9 +49,10 @@ class DependencyGraph:
         max_ratio = -1
         most_problematic = None
 
-        for package, direct_dependants in self.direct_dependants.items():
+        for package, trans_dependants in self.transitive_dependants.items():
+            direct_dependants = self.direct_dependants[package]
             if direct_dependants > 0:
-                ratio = self.transitive_dependants[package] / direct_dependants
+                ratio = len(trans_dependants) / direct_dependants
                 if ratio > max_ratio:
                     max_ratio = ratio
                     most_problematic = package
