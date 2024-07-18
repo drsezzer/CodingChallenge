@@ -15,7 +15,6 @@ c 4 d 0
 c 4 e 1
 """
 
-
 import sys
 from collections import defaultdict, deque
 
@@ -30,7 +29,7 @@ def parse_input():
 
 def find_transitive_dependents(dependencies):
     # To store transitive dependents count
-    transitive_count = defaultdict(set)
+    transitive_count = {pkg: set() for pkg in dependencies.keys()}
     
     def dfs(node, start):
         for dependent in dependencies[node]:
@@ -38,7 +37,7 @@ def find_transitive_dependents(dependencies):
                 transitive_count[start].add(dependent)
                 dfs(dependent, start)
                 
-    for pkg in dependencies:
+    for pkg in list(dependencies.keys()):  # Work on a static list of keys
         dfs(pkg, pkg)
     
     return transitive_count
