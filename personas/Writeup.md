@@ -14,7 +14,7 @@ Results
 | The Big Bang Theory's Leonard Hofstadter | 2 |   |   |   | 1 |   |   | 4 | 
 | The Big Bang Theory's Howard Wolowitz    | 2 |   |   |   |   | 1 |   | 4 |
 | Star Trek's Wesley Crusher               | 1 | 2 |   | 1 |   |   |   | 5 |
-| The Big Bang Tehory's Amy Farray Fowler  | 2 |   |   | 1 |   | 1 |   | 5 | 2nd attempt this time using gpt4o this used gpt4o. |
+| The Big Bang Tehory's Amy Farray Fowler  | 2 |   |   | 1 |   | 1 |   | 5 | 2nd attempt this time using gpt4o this used gpt4o. Write the solution as a class. |
 | Dame Judy Dench                          |   | 1 | 1 | 4 |   |   |   | 7 |
 | Jean Luc Picard                          | 1 | 1 |   | 1 |   |   |   | 7 | Bug: Missing variable (param) |
 | The Big Bang Theory's Sheldon Cooper     |   |   |   | 6 |   |   | 1 | 8 | Used networkx package, asked and used debug feedback. |
