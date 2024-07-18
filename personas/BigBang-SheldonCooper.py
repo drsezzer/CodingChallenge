@@ -23,25 +23,30 @@ def main():
         src_version, dest_version = int(src_version), int(dest_version)
         graph.add_edge((src_package, src_version), (dest_package, dest_version))
 
-    # Identify terminal nodes
-    terminal_nodes = [node for node in graph.nodes if not list(graph.successors(node))]
+    # Identify all nodes and their end-chain status
+    end_chain_nodes = {node: False for node in graph.nodes()}
+    for node in graph.nodes:
+        if not list(graph.successors(node)):  # This is an end-chain node
+            end_chain_nodes[node] = True
 
-    # Identify the most problematic among terminal nodes by the significance of what they depend on
+    # Determine which end-chain node is most problematic based on its dependency importance
     most_problematic = None
-    max_direct_dependents = -1
-    for node in terminal_nodes:
-        # Checking what each terminal node depends on
-        dependencies = graph.predecessors(node)
-        total_dependents = sum(len(list(graph.successors(dep))) for dep in dependencies)
+    longest_dependency_chain = -1
 
-        if total_dependents > max_direct_dependents:
-            most_problematic = node
-            max_direct_dependents = total_dependents
+    for node, is_end in end_chain_nodes.items():
+        if is_end:
+            # Compute the length of the longest path leading to this node
+            lengths = [nx.shortest_path_length(graph, source=n, target=node) for n in graph.nodes() if nx.has_path(graph, n, node)]
+            if lengths:
+                max_length = max(lengths)
+                if max_length > longest_dependency_chain:
+                    longest_dependency_chain = max_length
+                    most_problematic = node
 
     if most_problematic:
-        print(f"Most problematic terminal package: {most_problematic[0]} {most_problematic[1]}, depending on nodes with {max_direct_dependents} total direct dependents")
+        print(f"Most problematic package due to critical dependency chain: {most_problematic[0]} {most_problematic[1]}, Chain length: {longest_dependency_chain}")
     else:
-        print("No terminal nodes found.")
+        print("No problematic package found.")
 
 if __name__ == "__main__":
     main()
