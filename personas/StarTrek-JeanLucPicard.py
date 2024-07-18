@@ -27,7 +27,7 @@ def read_input():
             
     return dependencies, direct_dependents
 
-def calculate_transitive_dependants(dependencies):
+def calculate_transitive_dependants(dependencies, direct_dependents):
     transitive_dependents = defaultdict(set)
 
     # Process each package-version pair
@@ -41,8 +41,9 @@ def calculate_transitive_dependants(dependencies):
                 continue
             visited.add(current)
             for dependent in dependencies.get(current, []):
-                queue.append(dependent)
-                transitive_dependents[pkg_ver].add(dependent)
+                if dependent not in visited:
+                    queue.append(dependent)
+                    transitive_dependents[pkg_ver].add(dependent)
         
         # Remove direct dependents from transitive dependents to avoid double counting
         transitive_dependents[pkg_ver] -= direct_dependents[pkg_ver]
@@ -66,7 +67,7 @@ def find_most_problematic_package(direct_dependents, transitive_dependents):
 
 def main():
     dependencies, direct_dependents = read_input()
-    transitive_dependents = calculate_transitive_dependants(dependencies)
+    transitive_dependents = calculate_transitive_dependants(dependencies, direct_dependents)
     most_problematic_package = find_most_problematic_package(direct_dependents, transitive_dependents)
 
     if most_problematic_package:
