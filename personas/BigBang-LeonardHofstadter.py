@@ -15,58 +15,56 @@ c 4 d 0
 c 4 e 1
 """
 
-
 import sys
-from collections import defaultdict, deque
+from collections import defaultdict
 
 def parse_input():
-    dependencies = defaultdict(list)
-    inverse_dependencies = defaultdict(set)
+    direct_dependencies = defaultdict(list)
+    all_packages = set()
     for line in input.splitlines():
         if line.strip():
-            src_pkg, src_ver, dst_pkg, dst_ver = line.split()
+            src_pkg, src_ver, dst_pkg, dst_ver = line.strip().split()
             src_ver, dst_ver = int(src_ver), int(dst_ver)
-            dependencies[(dst_pkg, dst_ver)].append((src_pkg, src_ver))
-            inverse_dependencies[(src_pkg, src_ver)].add((dst_pkg, dst_ver))
-    return dependencies, inverse_dependencies
+            direct_dependencies[(dst_pkg, dst_ver)].append((src_pkg, src_ver))
+            all_packages.update([(src_pkg, src_ver), (dst_pkg, dst_ver)])
+    return direct_dependencies, all_packages
 
-def find_transitive_dependents(dependencies):
-    transitive_count = defaultdict(set)
+def compute_transitive_dependents(dependencies, all_packages):
+    transitive_dependents = {pkg: set() for pkg in all_packages}
     
-    def dfs(node, start):
-        for dependent in dependencies[node]:
-            if dependent not in transitive_count[start]:
-                transitive_count[start].add(dependent)
-                dfs(dependent, start)
+    def dfs(current, origin):
+        for dependent in dependencies[current]:
+            if dependent not in transitive_dependents[origin]:
+                transitive_dependents[origin].add(dependent)
+                dfs(dependent, origin)
 
-    for pkg in dependencies:
-        dfs(pkg, pkg)
+    for package in all_packages:
+        dfs(package, package)
     
-    return {pkg: len(deps) for pkg, deps in transitive_count.items()}
+    return transitive_dependents
 
-def calculate_problematic_ratio(dependencies, transitive_count):
-    direct_count = {pkg: len(dependencies[pkg]) for pkg in dependencies}
-    ratio = {}
+def calculate_problematic_ratio(direct_dependencies, transitive_dependents):
+    ratios = {}
+    for package in transitive_dependents:
+        td = len(transitive_dependents[package])
+        dd = len(direct_dependencies[package])
+        if dd > 0:
+            ratios[package] = td / dd
+    return ratios
 
-    for pkg in transitive_count:
-        if direct_count.get(pkg, 0) > 0:
-            ratio[pkg] = transitive_count[pkg] / direct_count[pkg]
-
-    return ratio
-
-def find_most_problematic_package(ratio):
-    return max(ratio, key=ratio.get, default=None)
+def find_most_problematic_package(ratios):
+    return max(ratios, key=ratios.get) if ratios else None
 
 def main():
-    dependencies, inverse_dependencies = parse_input()
-    transitive_count = find_transitive_dependents(inverse_dependencies)
-    ratio = calculate_problematic_ratio(inverse_dependencies, transitive_count)
-    most_problematic = find_most_problematic_package(ratio)
+    direct_dependencies, all_packages = parse_input()
+    transitive_dependents = compute_transitive_dependents(direct_dependencies, all_packages)
+    ratios = calculate_problematic_ratio(direct_dependencies, transitive_dependents)
+    most_problematic_package = find_most_problematic_package(ratios)
     
-    if most_problematic:
-        print(f"{most_problematic[0]} {most_problematic[1]}")
+    if most_problematic_package:
+        print(f"{most_problematic_package[0]} {most_problematic_package[1]}")
     else:
-        print("No dependencies found")
+        print("No problematic package found")
 
 if __name__ == "__main__":
     main()
