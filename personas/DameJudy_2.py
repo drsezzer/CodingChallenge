@@ -24,7 +24,7 @@ def main():
             dependencies[src].append(dest)
             reverse_dependencies[dest].add(src)
 
-    # Function to find all transitive dependants using the reverse graph
+    # Function to find all transitive dependents using the reverse graph
     def find_all_dependents(package):
         all_dependents = set()
         queue = deque([package])
@@ -39,9 +39,12 @@ def main():
     # Compute most problematic package
     most_problematic = None
     highest_ratio = -1
+
+    # Create a static list of packages to iterate over to avoid dictionary size modification issues
+    packages_list = list(reverse_dependencies.keys())
     
-    # Compute for each package that has at least one direct dependent
-    for package in reverse_dependencies:
+    # Compute for each package
+    for package in packages_list:
         transitive_dependents = find_all_dependents(package)
         direct_deps = reverse_dependencies[package]
         ratio = len(transitive_dependents) / len(direct_deps)
@@ -55,3 +58,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
