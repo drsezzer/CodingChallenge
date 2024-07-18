@@ -23,25 +23,23 @@ def main():
         src_version, dest_version = int(src_version), int(dest_version)
         graph.add_edge((src_package, src_version), (dest_package, dest_version))
 
-    # Explore an alternative metric for "problematic"
-    problematic_scores = {}
+    # Analyze for critical leaf nodes
+    critical_leaves = {}
     for node in graph.nodes:
         direct_dependents = set(graph.predecessors(node))
         transitive_dependents = set(nx.descendants(graph, node))
 
-        if direct_dependents:
-            ratio = len(transitive_dependents) / len(direct_dependents)
-        else:
-            ratio = 0  # Avoid division by zero
+        # Condition for a critical leaf node
+        if direct_dependents and not transitive_dependents:
+            critical_leaves[node] = len(direct_dependents)
 
-        # Maybe consider adding weight based on how many nodes this one influences indirectly
-        problematic_scores[node] = ratio
-
-    # Determine the most problematic package
-    most_problematic = max(problematic_scores, key=problematic_scores.get)
-    highest_ratio = problematic_scores[most_problematic]
-
-    print(f"Most problematic package: {most_problematic[0]} {most_problematic[1]}, Ratio: {highest_ratio:.2f}")
+    # Determine if there are any critical leaf nodes
+    if critical_leaves:
+        most_problematic = max(critical_leaves, key=critical_leaves.get)
+        direct_count = critical_leaves[most_problematic]
+        print(f"Most problematic package as critical leaf: {most_problematic[0]} {most_problematic[1]}, Direct dependents count: {direct_count}")
+    else:
+        print("No critical leaves found.")
 
 if __name__ == "__main__":
     main()
