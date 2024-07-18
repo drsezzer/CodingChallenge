@@ -38,7 +38,8 @@ def read_dependencies():
 
 def calculate_transitive_dependants(dependants):
     all_dependants = {}
-    for package in dependants:
+    # We need to iterate over a copy of keys to avoid changing the dictionary during iteration
+    for package in list(dependants.keys()):
         visited = set()
         queue = deque([package])
         while queue:
@@ -55,9 +56,10 @@ def find_most_problematic(dependants, all_dependants):
     max_ratio = -1
     problematic_package = None
 
-    for package, transitive_deps in all_dependants.items():
-        transitive_count = len(transitive_deps)
-        direct_count = len(dependants[package])  # Direct dependants
+    # Iterate over packages that have transitive dependants
+    for package in all_dependants:
+        transitive_count = len(all_dependants[package])
+        direct_count = len(dependants[package])  # Using dependants directly
         if direct_count > 0:  # To avoid division by zero
             ratio = transitive_count / direct_count
             if ratio > max_ratio:
