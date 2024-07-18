@@ -14,7 +14,6 @@ b 3 e 2
 c 4 d 0
 c 4 e 1
 """
-
 import sys
 from collections import defaultdict, deque
 
@@ -33,7 +32,7 @@ class DependencyGraph:
         self.direct_dependants[key_to] += 1
 
     def calculate_transitive_dependants(self):
-        for package in self.dependencies:
+        for package in list(self.dependencies.keys()):
             visited = set()
             queue = deque([package])
             while queue:
