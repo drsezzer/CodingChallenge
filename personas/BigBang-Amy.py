@@ -33,7 +33,7 @@ class DependencyGraph:
         self.direct_dependants[key_from] += 1
 
     def calculate_transitive_dependants(self):
-        for package in self.dependencies:
+        for package in list(self.dependencies.keys()):
             visited = set()
             queue = deque([package])
             while queue:
