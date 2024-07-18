@@ -13,39 +13,39 @@ from collections import defaultdict, deque
 
 def main():
     dependencies = defaultdict(list)
-    direct_dependants = defaultdict(set)
+    reverse_dependencies = defaultdict(set)
     
-    # Read input lines
-    for line in input.split('\n'): # sys.stdin:
+    # Parse input and construct dependency graph and reverse graph
+    for line in input.strip().split("\n"):
         if line.strip():
             src_pkg, src_ver, dest_pkg, dest_ver = line.split()
             src = (src_pkg, int(src_ver))
             dest = (dest_pkg, int(dest_ver))
             dependencies[src].append(dest)
-            direct_dependants[dest].add(src)
+            reverse_dependencies[dest].add(src)
 
-    # Function to find all transitive dependants
-    def find_transitive_dependants(package):
-        visited = set()
+    # Function to find all transitive dependants using the reverse graph
+    def find_all_dependents(package):
+        all_dependents = set()
         queue = deque([package])
         while queue:
             current = queue.popleft()
-            for dependent in dependencies[current]:
-                if dependent not in visited:
-                    visited.add(dependent)
-                    queue.append(dependent)
-        return visited
+            for dep in reverse_dependencies[current]:
+                if dep not in all_dependents:
+                    all_dependents.add(dep)
+                    queue.append(dep)
+        return all_dependents
 
-    # Determine the most problematic package
+    # Compute most problematic package
     most_problematic = None
     highest_ratio = -1
     
     # Compute for each package that has at least one direct dependent
-    for package in direct_dependants:
-        transitive_dependants = find_transitive_dependants(package)
-        direct_deps = direct_dependants[package]
-        ratio = len(transitive_dependants) / len(direct_deps)
-        print(f"Package: {package}, Ratio: {ratio}, Transitive: {len(transitive_dependants)}, Direct: {len(direct_deps)}")  # Debug output
+    for package in reverse_dependencies:
+        transitive_dependents = find_all_dependents(package)
+        direct_deps = reverse_dependencies[package]
+        ratio = len(transitive_dependents) / len(direct_deps)
+        print(f"Package: {package}, Ratio: {ratio}, Transitive: {len(transitive_dependents)}, Direct: {len(direct_deps)}")  # Debug output
         if ratio > highest_ratio:
             highest_ratio = ratio
             most_problematic = package
