@@ -23,35 +23,29 @@ def read_input():
 
 def build_graph(dependencies):
     graph = defaultdict(list)
+    reverse_graph = defaultdict(list)
     for depender, depender_ver, dependee, dependee_ver in dependencies:
-        graph[(dependee, dependee_ver)].append((depender, depender_ver))
-    return graph
+        graph[(depender, depender_ver)].append((dependee, dependee_ver))
+        reverse_graph[(dependee, dependee_ver)].append((depender, depender_ver))
+    return graph, reverse_graph
 
-def calculate_dependents(graph):
+def calculate_dependents(reverse_graph):
     direct_count = defaultdict(int)
-    transitive_count = defaultdict(set)  # Use a set to avoid duplicates
+    transitive_count = defaultdict(set)
 
-    # Count direct dependants and prepare for transitive calculation
-    for node, dependants in graph.items():
-        direct_count[node] = len(dependants)
-        for dependant in dependants:
-            transitive_count[dependant].add(node)
-
-    # Calculate transitive dependants using a BFS
-    for node in list(graph):
-        visited = set()
+    for node in reverse_graph:
+        if node not in direct_count:
+            direct_count[node] = 0  # Ensure every node has a direct count entry
         queue = deque([node])
         while queue:
             current = queue.popleft()
-            if current not in visited:
-                visited.add(current)
-                for dependant in graph[current]:
-                    if dependant not in visited:
-                        transitive_count[dependant].update(transitive_count[current])
-                        queue.append(dependant)
+            for dependent in reverse_graph[current]:
+                transitive_count[dependent].add(node)
+                direct_count[dependent] += 1
+                queue.append(dependent)
 
-    # Convert sets to counts
-    transitive_counts = {k: len(v) for k, v in transitive_count.items()}
+    # Convert sets in transitive_count to their lengths
+    transitive_counts = {node: len(dependents) for node, dependents in transitive_count.items()}
     return transitive_counts, direct_count
 
 def find_most_problematic(transitive_count, direct_count):
@@ -59,7 +53,7 @@ def find_most_problematic(transitive_count, direct_count):
     problematic_package = None
     for node in direct_count:
         if direct_count[node] > 0:  # Avoid division by zero
-            ratio = transitive_count[node] / direct_count[node]
+            ratio = transitive_count.get(node, 0) / direct_count[node]
             if ratio > max_ratio:
                 max_ratio = ratio
                 problematic_package = node
@@ -67,8 +61,8 @@ def find_most_problematic(transitive_count, direct_count):
 
 def main():
     dependencies = read_input()
-    graph = build_graph(dependencies)
-    transitive_count, direct_count = calculate_dependents(graph)
+    _, reverse_graph = build_graph(dependencies)
+    transitive_count, direct_count = calculate_dependents(reverse_graph)
     problematic_package = find_most_problematic(transitive_count, direct_count)
     if problematic_package:
         print(f"{problematic_package[0]} {problematic_package[1]}")
